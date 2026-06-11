@@ -3,367 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sisonke Career Services | Business Dashboard</title>
-    
+    <title>M² Printers Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            navy: '#0A1F44',
-                            royal: '#2563EB',
-                            white: '#FFFFFF',
-                            light: '#F5F7FA',
-                            accent: '#38BDF8',
-                            success: '#10B981',
-                            warning: '#F59E0B',
-                            danger: '#EF4444'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #F5F7FA; color: #1e293b; }
-        .sidebar-link.active { background-color: #2563EB; color: #FFFFFF; font-weight: 600; }
-        .sidebar-link:hover:not(.active) { background-color: rgba(37, 99, 235, 0.1); }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .toast { animation: slideInRight 0.3s ease-out forwards; }
-
-        /* Print Styles */
-        @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; background: white; }
-            .no-print { display: none !important; }
-        }
-        
-        /* Hide sections */
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
         .view-section { display: none; }
         .view-section.active { display: block; }
+        .sidebar-link.active { background: rgba(37, 99, 235, 0.6); }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden text-sm md:text-base">
+<body class="bg-gradient-to-br from-slate-900 to-blue-900 min-h-screen text-white font-sans">
 
-    <div id="mobile-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-20 hidden md:hidden" onclick="app.toggleSidebar()"></div>
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-64 glass p-6 flex flex-col">
+            <h2 class="text-2xl font-bold mb-8 text-blue-300">M² Printers</h2>
+            <nav class="space-y-2 flex-1">
+                <a href="#" onclick="app.navigate('dashboard')" class="sidebar-link active block p-3 rounded transition" data-target="dashboard"><i class="fas fa-home mr-2"></i> Dashboard</a>
+                <a href="#" onclick="app.navigate('sales')" class="sidebar-link block p-3 rounded transition" data-target="sales"><i class="fas fa-plus mr-2"></i> New Sale</a>
+                <a href="#" onclick="app.navigate('transactions')" class="sidebar-link block p-3 rounded" data-target="transactions"><i class="fas fa-list mr-2"></i> Transactions</a>
+                <a href="#" onclick="app.navigate('reports')" class="sidebar-link block p-3 rounded" data-target="reports"><i class="fas fa-chart-line mr-2"></i> Reports</a>
+                <a href="#" onclick="app.navigate('services')" class="sidebar-link block p-3 rounded" data-target="services"><i class="fas fa-cog mr-2"></i> Services List</a>
+                <a href="#" onclick="app.navigate('settings')" class="sidebar-link block p-3 rounded" data-target="settings"><i class="fas fa-tools mr-2"></i> Settings</a>
+            </nav>
+        </aside>
 
-    <aside id="sidebar" class="bg-brand-navy text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 z-30 flex flex-col shadow-xl">
-        <div class="p-6 flex items-center justify-between border-b border-gray-700">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-brand-royal rounded flex items-center justify-center text-xl font-bold shadow-lg">SC</div>
-                <div>
-                    <h2 class="text-lg font-bold leading-tight" id="sidebar-business-name">Sisonke</h2>
-                    <p class="text-xs text-gray-400">Dashboard</p>
-                </div>
-            </div>
-            <button class="md:hidden text-gray-300 hover:text-white" onclick="app.toggleSidebar()"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        
-        <nav class="flex-1 overflow-y-auto py-4">
-            <ul class="space-y-1 px-3">
-                <li><a href="#" onclick="app.navigate('dashboard')" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg transition-colors" data-target="dashboard"><i class="fas fa-home w-5 text-center"></i> Dashboard</a></li>
-                <li><a href="#" onclick="app.navigate('sales-entry')" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors" data-target="sales-entry"><i class="fas fa-cash-register w-5 text-center"></i> New Sale</a></li>
-                <li><a href="#" onclick="app.navigate('transactions')" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors" data-target="transactions"><i class="fas fa-list w-5 text-center"></i> Transactions</a></li>
-                <li><a href="#" onclick="app.navigate('reports')" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors" data-target="reports"><i class="fas fa-chart-line w-5 text-center"></i> Reports & Exports</a></li>
-                <li><a href="#" onclick="app.navigate('invoice')" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors" data-target="invoice"><i class="fas fa-file-invoice w-5 text-center"></i> Invoice Generator</a></li>
-                <li><a href="#" onclick="app.navigate('services')" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors" data-target="services"><i class="fas fa-box w-5 text-center"></i> Services & Prices</a></li>
-            </ul>
-        </nav>
-        
-        <div class="p-4 border-t border-gray-700">
-            <a href="#" onclick="app.navigate('settings')" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-colors" data-target="settings"><i class="fas fa-cog w-5 text-center"></i> Settings & Backup</a>
-        </div>
-    </aside>
-
-    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-brand-light relative z-0">
-        <header class="bg-white shadow-sm z-10 p-4 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <button class="md:hidden text-gray-600 hover:text-brand-royal" onclick="app.toggleSidebar()"><i class="fas fa-bars text-xl"></i></button>
-                <h1 id="page-title" class="text-xl font-bold text-gray-800">Dashboard Overview</h1>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-semibold text-gray-800" id="header-date"></p>
-                    <p class="text-xs text-gray-500" id="header-time"></p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-brand-navy flex items-center justify-center text-white font-bold cursor-pointer hover:bg-brand-royal transition shadow-md">
-                    <i class="fas fa-user"></i>
-                </div>
-            </div>
-        </header>
-
-        <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative">
-            
-            <div id="view-dashboard" class="view-section active animate-fade-in space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-royal">
-                        <p class="text-sm font-medium text-gray-500">Today's Revenue</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-today">R0.00</h3>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-accent">
-                        <p class="text-sm font-medium text-gray-500">This Week</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-week">R0.00</h3>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-success">
-                        <p class="text-sm font-medium text-gray-500">This Month</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-month">R0.00</h3>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-warning">
-                        <p class="text-sm font-medium text-gray-500">Total Transactions</p>
-                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="kpi-transactions">0</h3>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white rounded-xl shadow-sm p-6 lg:col-span-2">
-                        <h3 class="text-lg font-semibold mb-4 text-gray-800">Revenue Trend</h3>
-                        <div class="relative h-64 w-full"><canvas id="chartTrend"></canvas></div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm p-6">
-                        <h3 class="text-lg font-semibold mb-4 text-gray-800">Top 5 Services</h3>
-                        <div class="relative h-64 w-full"><canvas id="chartServices"></canvas></div>
-                    </div>
+        <main class="flex-1 p-8 overflow-y-auto">
+            <div id="view-dashboard" class="view-section active">
+                <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
+                <div class="glass p-6 rounded-2xl w-64">
+                    <p class="text-blue-200">Today's Revenue</p>
+                    <h3 class="text-3xl font-bold" id="kpi-today">R0.00</h3>
                 </div>
             </div>
 
-            <div id="view-sales-entry" class="view-section animate-fade-in max-w-3xl mx-auto">
-                <div class="bg-white rounded-xl shadow-md p-8">
-                    <h2 class="text-xl font-bold mb-6">Capture New Sale</h2>
-                    <form id="form-sale" onsubmit="app.sales.submit(event)" class="space-y-4">
-                        <select id="sale-category-filter" class="w-full border rounded-lg p-3" onchange="app.sales.filterServices()"></select>
-                        <select id="sale-service" required class="w-full border rounded-lg p-3" onchange="app.sales.updatePrice()"></select>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="sale-price" class="border rounded-lg p-3" placeholder="Price" readonly>
-                            <input type="number" id="sale-quantity" required min="1" value="1" class="border rounded-lg p-3" oninput="app.sales.calculateTotal()">
-                        </div>
-                        <input type="text" id="sale-total" class="w-full font-bold text-lg p-3 bg-blue-50 border rounded-lg" readonly value="R0.00">
-                        <button type="submit" class="w-full bg-brand-success text-white py-4 rounded-lg font-bold">Add Sale</button>
+            <div id="view-sales" class="view-section">
+                <h1 class="text-2xl font-bold mb-6">New Sale</h1>
+                <div class="glass p-8 rounded-2xl max-w-md">
+                    <form id="form-sale" onsubmit="app.sales.submit(event)">
+                        <select id="sale-service" required class="w-full bg-slate-800 border-0 p-3 rounded mb-4"></select>
+                        <input type="number" id="sale-qty" value="1" min="1" class="w-full bg-slate-800 p-3 rounded mb-4" oninput="app.sales.calculate()">
+                        <input type="text" id="sale-total" class="w-full bg-blue-900/50 p-3 rounded mb-4 font-bold" readonly value="R0.00">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded font-bold">Process Sale</button>
                     </form>
                 </div>
             </div>
 
-            <div id="view-transactions" class="view-section animate-fade-in space-y-6">
-                <div class="bg-white rounded-xl shadow-sm p-6">
-                    <h2 class="text-xl font-bold mb-6">Transaction History</h2>
-                    <div class="overflow-x-auto"><table class="w-full text-left" id="transactions-table"></table></div>
+            <div id="view-transactions" class="view-section">
+                <h1 class="text-2xl font-bold mb-6">History</h1>
+                <div class="glass p-6 rounded-2xl overflow-y-auto max-h-[500px]">
+                    <table class="w-full text-left"><tbody id="tx-table"></tbody></table>
                 </div>
             </div>
 
-            <div id="view-reports" class="view-section animate-fade-in space-y-6">
-                <div class="bg-white rounded-xl shadow-sm p-6">
-                    <h2 class="text-xl font-bold mb-6">Generate Reports</h2>
+            <div id="view-reports" class="view-section">
+                <h1 class="text-2xl font-bold mb-6">Reports</h1>
+                <div class="glass p-6 rounded-2xl">
                     <div class="flex gap-4 mb-6">
-                        <button onclick="app.reports.setRange('daily')" class="bg-brand-royal text-white px-4 py-2 rounded">Daily</button>
-                        <button onclick="app.reports.setRange('weekly')" class="bg-brand-royal text-white px-4 py-2 rounded">Weekly</button>
-                        <button onclick="app.reports.setRange('monthly')" class="bg-brand-royal text-white px-4 py-2 rounded">Monthly</button>
-                    </div>
-                    <div id="rep-revenue" class="text-2xl font-bold">R0.00</div>
-                    <button onclick="app.reports.exportPDF()" class="mt-4 bg-red-600 text-white px-4 py-2 rounded">Export PDF</button>
-                </div>
-            </div>
-
-            <div id="view-services" class="view-section animate-fade-in space-y-6">
-                <div class="bg-white rounded-xl shadow-sm p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold">Manage Services</h2>
-                        <button onclick="app.services.openModal()" class="bg-brand-royal text-white px-4 py-2 rounded">Add New</button>
-                    </div>
-                    <table class="w-full" id="services-table"></table>
-                </div>
-            </div>
-
-            <div id="view-invoice" class="view-section animate-fade-in max-w-4xl mx-auto space-y-6">
-                <div class="bg-white rounded-xl shadow-sm p-6">
-                    <h2 class="text-xl font-bold mb-6">Invoice Generator</h2>
-                    <input type="text" id="inv-customer" placeholder="Customer Name" class="w-full border p-2 mb-4">
-                    <select id="inv-service" class="w-full border p-2 mb-4"></select>
-                    <button onclick="app.invoice.addItem()" class="bg-brand-royal text-white px-4 py-2 rounded">Add Item</button>
-                    <div id="preview-items" class="mt-4"></div>
-                    <div id="preview-total" class="font-bold text-xl mt-4">Total: R0.00</div>
-                    <button onclick="app.invoice.downloadPDF()" class="mt-4 bg-gray-800 text-white px-4 py-2 rounded">Download PDF</button>
-                </div>
-            </div>
-
-            <div id="view-settings" class="view-section animate-fade-in max-w-4xl mx-auto space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-xl shadow-sm p-6">
-                        <h2 class="text-xl font-bold mb-6">Business Profile</h2>
-                        <form onsubmit="app.settings.save(event)" class="space-y-4">
-                            <input type="text" id="set-name" class="w-full border p-2" required>
-                            <input type="text" id="set-phone1" class="w-full border p-2" required>
-                            <textarea id="set-address" rows="3" class="w-full border p-2"></textarea>
-                            <button type="submit" class="w-full bg-brand-royal text-white p-2">Save Settings</button>
-                        </form>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm p-6">
-                        <h2 class="text-xl font-bold mb-6 text-red-600">Data Management</h2>
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="date" id="clear-start" class="border p-2 text-sm">
-                                <input type="date" id="clear-end" class="border p-2 text-sm">
-                            </div>
-                            <button onclick="app.backup.clearByRange()" class="w-full bg-orange-500 text-white p-3 rounded">Clear Range</button>
-                            <button onclick="app.backup.factoryReset()" class="w-full bg-red-600 text-white p-3 rounded">Factory Reset</button>
-                        </div>
+                        <input type="date" id="rep-start" class="bg-slate-800 p-2 rounded">
+                        <input type="date" id="rep-end" class="bg-slate-800 p-2 rounded">
+                        <button onclick="app.reports.downloadPDF()" class="bg-red-600 px-4 py-2 rounded">PDF</button>
+                        <button onclick="app.reports.copyWhatsApp()" class="bg-green-600 px-4 py-2 rounded">WhatsApp Report</button>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <div id="service-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 class="font-bold text-lg mb-4" id="service-modal-title">Edit Service</h3>
-            <form onsubmit="app.services.save(event)">
-                <input type="hidden" id="srv-id">
-                <input type="text" id="srv-category" class="w-full border p-2 mb-2" placeholder="Category" required>
-                <input type="text" id="srv-name" class="w-full border p-2 mb-2" placeholder="Name" required>
-                <input type="text" id="srv-desc" class="w-full border p-2 mb-2" placeholder="Description">
-                <input type="number" id="srv-price" class="w-full border p-2 mb-4" placeholder="Price" required step="0.01">
-                <div class="flex gap-2">
-                    <button type="button" onclick="app.services.closeModal()" class="flex-1 bg-gray-200 py-2 rounded">Cancel</button>
-                    <button type="submit" class="flex-1 bg-brand-royal text-white py-2 rounded">Save</button>
+            <div id="view-services" class="view-section">
+                <h1 class="text-2xl font-bold mb-6">Service Price List</h1>
+                <div class="glass p-6 rounded-2xl max-h-[500px] overflow-y-auto">
+                    <table class="w-full text-left" id="services-list"></table>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div id="view-settings" class="view-section">
+                <h1 class="text-2xl font-bold mb-6">Settings</h1>
+                <button onclick="app.backup.factoryReset()" class="bg-red-800 text-white px-6 py-3 rounded"><i class="fas fa-trash"></i> FACTORY RESET (DELETE ALL DATA)</button>
+            </div>
+        </main>
     </div>
 
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
-
     <script>
-        const formatCurrency = (amount) => new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(amount);
-        const generateId = () => Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-
-        const defaultServices = [
-            { id: '1', category: 'CV Packages', name: 'CV (Word + PDF)', desc: 'Professional CV + editable copy.', price: 75.00 },
-            { id: '2', category: 'CV Packages', name: 'CV + Cover Letter', desc: 'CV, cover letter + editable copy.', price: 95.00 },
-            { id: '3', category: 'CV Packages', name: 'CV + Cover Letter + Attachments', desc: 'Complete CV package + attachment formatting.', price: 150.00 },
-            { id: '4', category: 'Profile Setup', name: 'Indeed Profile + CV', desc: 'Indeed profile setup/update + CV.', price: 180.00 },
-            { id: '5', category: 'Profile Setup', name: 'LinkedIn Profile + CV', desc: 'LinkedIn setup/update + CV.', price: 180.00 },
-            { id: '6', category: 'Profile Setup', name: 'Indeed + LinkedIn + CV', desc: 'Full profile package + CV.', price: 250.00 },
-            { id: '7', category: 'Local Specials', name: 'CV Writing', desc: 'Basic CV writing special.', price: 20.00 },
-            { id: '8', category: 'Local Specials', name: 'CV + Cover Letter', desc: 'Basic CV and cover letter special.', price: 30.00 }
+        const fullServiceList = [
+            { cat: 'Printing', name: 'B&W Printing', price: 2.50 },
+            { cat: 'Printing', name: 'B&W Photocopying', price: 2.50 },
+            { cat: 'Printing', name: 'Colour Printing', price: 4.00 },
+            { cat: 'CV', name: 'CV Writing', price: 20 },
+            { cat: 'CV', name: 'CV Printing', price: 20 },
+            { cat: 'CV', name: 'CV + Cover Letter', price: 30 },
+            { cat: 'CV', name: 'CV (Word + PDF)', price: 75 },
+            { cat: 'CV', name: 'CV + Cover Letter (Word+PDF)', price: 95 },
+            { cat: 'CV', name: 'CV + Cover Letter + Attachments', price: 150 },
+            { cat: 'CV', name: 'Indeed Profile + CV', price: 180 },
+            { cat: 'CV', name: 'LinkedIn Profile + CV', price: 180 },
+            { cat: 'CV', name: 'Indeed + LinkedIn + CV', price: 250 },
+            { cat: 'Scanning', name: 'Scan to Phone', price: 3 },
+            { cat: 'Scanning', name: 'Scan to Email/USB/PDF', price: 5 },
+            { cat: 'Funeral', name: 'Single Programme', price: 5.50 },
+            { cat: 'Funeral', name: '50 Programmes', price: 300 },
+            { cat: 'Education', name: 'University Apps (3 Inst)', price: 90 },
+            { cat: 'Education', name: 'University Apps (5 Inst)', price: 150 },
+            { cat: 'Education', name: 'NSFAS Application', price: 50 },
+            { cat: 'Tech', name: 'Antivirus Install', price: 250 },
+            { cat: 'Tech', name: 'Windows Install', price: 450 },
+            { cat: 'Tech', name: 'Office Install', price: 300 },
+            { cat: 'Tech', name: 'Cleanup & Optimization', price: 250 },
+            { cat: 'Design', name: 'Logo Design', price: 200 },
+            { cat: 'Design', name: 'AI Flyer / Poster', price: 150 },
+            { cat: 'Design', name: 'Manual Flyer / Poster', price: 200 },
+            { cat: 'Design', name: 'Invitation Design', price: 200 },
+            { cat: 'Design', name: 'Marriage Invitation', price: 150 },
+            { cat: 'Design', name: 'Invitation Video', price: 250 },
+            { cat: 'Design', name: 'Social Media Post', price: 75 },
+            { cat: 'Business', name: 'Company Registration', price: 300 },
+            { cat: 'Business', name: 'Business Profile Creation', price: 500 }
         ];
 
         const app = {
-            data: { services: [], sales: [], settings: { name: 'Sisonke Career Services', phone1: '0714217169', address: 'Online' } },
-            
+            data: { services: [], sales: [] },
             init() {
-                this.loadData();
-                this.navigate('dashboard');
-                this.toast('Welcome to Sisonke Dashboard!', 'success');
-            },
-
-            loadData() {
-                this.data.services = JSON.parse(localStorage.getItem('m2_services')) || [...defaultServices];
+                this.data.services = JSON.parse(localStorage.getItem('m2_services')) || fullServiceList;
                 this.data.sales = JSON.parse(localStorage.getItem('m2_sales')) || [];
-                this.data.settings = JSON.parse(localStorage.getItem('m2_settings')) || this.data.settings;
+                this.navigate('dashboard');
+                this.updateUI();
             },
-
             saveData() {
                 localStorage.setItem('m2_services', JSON.stringify(this.data.services));
                 localStorage.setItem('m2_sales', JSON.stringify(this.data.sales));
-                localStorage.setItem('m2_settings', JSON.stringify(this.data.settings));
             },
-
             navigate(view) {
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-                document.getElementById(`view-${view}`).classList.add('active');
-                if(view === 'services') this.services.render();
+                document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+                document.getElementById('view-' + view).classList.add('active');
+                document.querySelector(`[data-target="${view}"]`).classList.add('active');
             },
-
-            toast(msg, type = 'success') {
-                const toast = document.createElement('div');
-                toast.className = `p-4 rounded text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-                toast.textContent = msg;
-                document.getElementById('toast-container').appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
-            },
-
             sales: {
-                filterServices() { /* ... */ },
-                updatePrice() { /* ... */ },
-                calculateTotal() { /* ... */ },
+                populate() {
+                    const sel = document.getElementById('sale-service');
+                    sel.innerHTML = '<option value="">Select Service</option>';
+                    app.data.services.forEach((s, i) => sel.innerHTML += `<option value="${i}">${s.name} - R${s.price.toFixed(2)}</option>`);
+                },
+                calculate() {
+                    const s = app.data.services[document.getElementById('sale-service').value];
+                    const qty = document.getElementById('sale-qty').value;
+                    if(s) document.getElementById('sale-total').value = `R${(s.price * qty).toFixed(2)}`;
+                },
                 submit(e) {
                     e.preventDefault();
-                    // Basic submit logic
-                    const sId = document.getElementById('sale-service').value;
-                    const service = app.data.services.find(s => s.id == sId);
-                    app.data.sales.push({ id: generateId(), serviceName: service.name, total: parseFloat(document.getElementById('sale-price').value), qty: document.getElementById('sale-quantity').value, timestamp: Date.now() });
+                    const s = app.data.services[document.getElementById('sale-service').value];
+                    app.data.sales.push({ name: s.name, total: s.price * document.getElementById('sale-qty').value, timestamp: Date.now() });
                     app.saveData();
-                    app.toast('Saved!');
+                    app.updateUI();
+                    alert('Sale Saved!');
                 }
             },
-
-            services: {
-                render() {
-                    const tbody = document.getElementById('services-table');
-                    tbody.innerHTML = app.data.services.map(s => `<tr><td>${s.name}</td><td>${formatCurrency(s.price)}</td><td><button onclick="app.services.edit('${s.id}')">Edit</button></td></tr>`).join('');
+            updateUI() {
+                this.sales.populate();
+                // Render Services
+                const sTable = document.getElementById('services-list');
+                sTable.innerHTML = '';
+                this.data.services.forEach(s => sTable.innerHTML += `<tr><td class="py-2 text-blue-300">${s.cat}</td><td class="py-2">${s.name}</td><td class="py-2 text-right">R${s.price.toFixed(2)}</td></tr>`);
+                // Render Transactions
+                const tTable = document.getElementById('tx-table');
+                tTable.innerHTML = '';
+                this.data.sales.forEach(s => tTable.innerHTML += `<tr><td class="py-2">${s.name}</td><td class="py-2 text-right">R${s.total.toFixed(2)}</td></tr>`);
+                const todayRev = this.data.sales.filter(s => new Date(s.timestamp).toDateString() === new Date().toDateString()).reduce((a,b) => a + b.total, 0);
+                document.getElementById('kpi-today').textContent = `R${todayRev.toFixed(2)}`;
+            },
+            reports: {
+                downloadPDF() {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    doc.text("Sales Report", 10, 10);
+                    let rows = app.data.sales.map(s => [s.name, `R${s.total}`]);
+                    doc.autoTable({ head: [['Service', 'Total']], body: rows });
+                    doc.save("Report.pdf");
                 },
-                openModal(id = null) { document.getElementById('service-modal').classList.remove('hidden'); },
-                closeModal() { document.getElementById('service-modal').classList.add('hidden'); },
-                save(e) {
-                    e.preventDefault();
-                    app.saveData();
-                    this.closeModal();
-                    app.toast('Service Saved');
-                }
-            },
-
-            backup: {
-                clearByRange() {
-                    const sd = new Date(document.getElementById('clear-start').value).getTime();
-                    const ed = new Date(document.getElementById('clear-end').value).getTime() + 86400000;
-                    app.data.sales = app.data.sales.filter(s => s.timestamp < sd || s.timestamp >= ed);
-                    app.saveData();
-                    app.toast('Range Cleared');
+                copyWhatsApp() {
+                    let msg = "M² Printers Report:\n";
+                    app.data.sales.forEach(s => msg += `${s.name}: R${s.total}\n`);
+                    navigator.clipboard.writeText(msg).then(() => alert("Copied!"));
                 },
-                factoryReset() {
-                    if(prompt('Type "DELETE" to confirm') === 'DELETE') {
-                        localStorage.clear();
-                        window.location.reload();
-                    }
+                clearRange() {
+                    const start = new Date(document.getElementById('rep-start').value).getTime();
+                    const end = new Date(document.getElementById('rep-end').value).getTime() + 86400000;
+                    app.data.sales = app.data.sales.filter(s => !(s.timestamp >= start && s.timestamp <= end));
+                    app.saveData();
+                    app.updateUI();
+                    alert('Cleared.');
                 }
             },
-
-            settings: {
-                save(e) { e.preventDefault(); app.saveData(); app.toast('Saved'); }
-            },
-
-            invoice: {
-                addItem() { /* ... */ },
-                downloadPDF() { /* ... */ }
-            }
+            backup: { factoryReset() { if(confirm('Delete ALL data?')) { localStorage.clear(); location.reload(); } } }
         };
-
-        document.addEventListener('DOMContentLoaded', () => app.init());
+        app.init();
     </script>
 </body>
 </html>
